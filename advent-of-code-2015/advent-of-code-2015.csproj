@@ -22,4 +22,13 @@
     <Folder Include="Common\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Day01\example.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Day01\input.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
