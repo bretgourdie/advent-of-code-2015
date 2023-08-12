@@ -13,4 +13,7 @@ internal struct Point2D
     }
 
     public static Point2D Zero => new Point2D(0, 0);
+
+    public override string ToString() =>
+        $"{X}, {Y}";
 }
