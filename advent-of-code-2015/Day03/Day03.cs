@@ -9,29 +9,17 @@ internal class Day03 : AdventSolution
 
     protected override long part2InputExpected => 2639;
 
-    protected void visit(
-        long x,
-        long y,
-        ISet<Point2D> visited)
-    {
-        var pos = new Point2D(x, y);
-
-        if (!visited.Contains(pos))
-        {
-            visited.Add(pos);
-        }
-    }
-
     protected override long part1Work(string[] input) =>
-        work(input, new Santa());
+        work(input, 1);
 
     protected override long part2Work(string[] input) =>
-        work(input, new SantaAndRoboSanta());
+        work(input, 2);
 
     private long work(
         string[] input,
-        IDeliveryStrategy deliveryStrategy)
+        int numberOfVisitors)
     {
+        var deliveryStrategy = new DeliveryStrategy(numberOfVisitors);
         var line = input.Single();
 
         var visited = new HashSet<Point2D>();
