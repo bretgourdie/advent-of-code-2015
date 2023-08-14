@@ -1,7 +1,12 @@
 ﻿namespace advent_of_code_2015.Day07;
 internal class Day07 : AdventSolutionTemplate<ushort, ushort>
 {
-    protected override ushort part1Work(string[] input)
+    private const string part1Target = "a";
+    private const string part2Target = "b";
+
+    private void work(
+        string[] input,
+        IDictionary<string, ushort> identifiers)
     {
         var rules = new HashSet<Rule>();
 
@@ -10,7 +15,6 @@ internal class Day07 : AdventSolutionTemplate<ushort, ushort>
             rules.Add(new Rule(line));
         }
 
-        var identifiers = new Dictionary<string, ushort>();
 
         while (rules.Any())
         {
@@ -30,17 +34,28 @@ internal class Day07 : AdventSolutionTemplate<ushort, ushort>
                 rules.Remove(ruleToRemove);
             }
         }
+    }
 
-        return identifiers["a"];
+    protected override ushort part1Work(string[] input)
+    {
+        var identifiers = new Dictionary<string, ushort>();
+        work(input, identifiers);
+        return identifiers[part1Target];
     }
 
     protected override ushort part1ExampleExpected => 72;
     protected override ushort part1InputExpected => 46065;
     protected override ushort part2Work(string[] input)
     {
-        throw new NotImplementedException();
+        var identifiers = new Dictionary<string, ushort>();
+        work(input, identifiers);
+        var aValue = identifiers[part1Target];
+        identifiers = new Dictionary<string, ushort>();
+        identifiers[part2Target] = aValue;
+        work(input, identifiers);
+        return identifiers[part1Target];
     }
 
-    protected override ushort part2ExampleExpected { get; }
-    protected override ushort part2InputExpected { get; }
+    protected override ushort part2ExampleExpected => 72;
+    protected override ushort part2InputExpected => 14134;
 }
