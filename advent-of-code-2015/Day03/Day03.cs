@@ -32,8 +32,6 @@ internal class Day03 : AdventSolution
         string[] input,
         IDeliveryStrategy deliveryStrategy)
     {
-        long x = 0, y = 0;
-
         var line = input.Single();
 
         var visited = new HashSet<Point2D>();
