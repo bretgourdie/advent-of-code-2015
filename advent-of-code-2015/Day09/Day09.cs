@@ -1,18 +1,11 @@
 ﻿namespace advent_of_code_2015.Day09;
 internal class Day09 : AdventSolution
 {
-
-
     protected override long part1ExampleExpected => 605;
     protected override long part1InputExpected => 251;
 
     protected override long part2ExampleExpected => 982;
     protected override long part2InputExpected => 898;
-
-    protected override long part1Work(string[] input) =>
-        work(input,
-            long.MaxValue,
-            Math.Min);
 
     private long work(
         string[] input,
@@ -90,6 +83,11 @@ internal class Day09 : AdventSolution
 
         return bestPath;
     }
+
+    protected override long part1Work(string[] input) =>
+        work(input,
+            long.MaxValue,
+            Math.Min);
 
     protected override long part2Work(string[] input) =>
         work(input,
