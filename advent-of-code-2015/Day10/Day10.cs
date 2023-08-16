@@ -6,14 +6,16 @@ internal class Day10 : AdventSolution
     protected override long part1ExampleExpected => 82350;
     protected override long part1InputExpected => 329356;
 
-    protected override long part2ExampleExpected { get; }
-    protected override long part2InputExpected { get; }
+    protected override long part2ExampleExpected => 1166642;
+    protected override long part2InputExpected => 4666278;
 
-    protected override long part1Work(string[] input)
+    protected long work(
+        string[] input,
+        int iterations)
     {
         var strNumber = input.Single();
 
-        for (int iteration = 0; iteration < 40; iteration++)
+        for (int iteration = 0; iteration < iterations; iteration++)
         {
             int index = 0;
             var sb = new StringBuilder();
@@ -41,8 +43,9 @@ internal class Day10 : AdventSolution
         return strNumber.Length;
     }
 
-    protected override long part2Work(string[] input)
-    {
-        throw new NotImplementedException();
-    }
+    protected override long part1Work(string[] input) =>
+        work(input, 40);
+
+    protected override long part2Work(string[] input) =>
+        work(input, 50);
 }
