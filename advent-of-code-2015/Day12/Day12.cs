@@ -1,9 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace advent_of_code_2015.Day12;
 internal class Day12 : AdventSolution
@@ -12,9 +7,9 @@ internal class Day12 : AdventSolution
     protected override long part1InputExpected => 191164;
 
     protected override long part2ExampleExpected => 6 + 4 + 0 + 6;
-    protected override long part2InputExpected => -1;
+    protected override long part2InputExpected => 87842;
 
-    private long work(string[] input, Func<JToken, bool> addStrategy)
+    private long work(string[] input, Func<JObject, bool> addStrategy)
     {
         var line = input.Single();
 
@@ -25,7 +20,7 @@ internal class Day12 : AdventSolution
 
     private long getSum(
         JToken jToken,
-        Func<JToken, bool> addStrategy)
+        Func<JObject, bool> shouldAdd)
     {
         long sum = 0;
 
@@ -34,31 +29,32 @@ internal class Day12 : AdventSolution
             case JTokenType.Array:
                 foreach (var element in jToken)
                 {
-                    sum += getSum(element, addStrategy);
+                    sum += getSum(element, shouldAdd);
                 }
-
                 break;
+
             case JTokenType.Integer:
                 sum += jToken.Value<long>();
                 break;
 
             case JTokenType.Object:
-                if (jToken.All(element => addStrategy(element)))
+                if (jToken is JObject jObject)
                 {
-                    foreach (var element in jToken)
+                    if (shouldAdd(jObject))
                     {
-                        sum += getSum(element, addStrategy);
+                        foreach (var element in jToken)
+                        {
+                            sum += getSum(element, shouldAdd);
+                        }
                     }
                 }
-
                 break;
 
             case JTokenType.Property:
-                foreach (var value in jToken.Values())
+                if (jToken is JProperty jProperty)
                 {
-                    sum += getSum(value, addStrategy);
+                    sum += getSum(jProperty.Value, shouldAdd);
                 }
-
                 break;
         }
 
@@ -67,13 +63,16 @@ internal class Day12 : AdventSolution
 
     private bool addEverything(JToken _) => true;
 
-    private bool ignoreReds(JToken token)
+    private bool ignoreReds(JObject jObject)
     {
-        foreach (var element in token)
+        foreach (var element in jObject)
         {
-            if (element.Type == JTokenType.String)
+            var valueToken = element.Value;
+            if (valueToken?.Type == JTokenType.String)
             {
-                if (element.Value<string>() == "red")
+                var value = valueToken.Value<string>();
+
+                if (value == "red")
                 {
                     return false;
                 }
