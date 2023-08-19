@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Text.Json;
 
 namespace advent_of_code_2015.Day12;
 internal class Day12 : AdventSolution
@@ -9,82 +9,82 @@ internal class Day12 : AdventSolution
     protected override long part2ExampleExpected => 6 + 4 + 0 + 6;
     protected override long part2InputExpected => 87842;
 
-    private long work(string[] input, Func<JObject, bool> addStrategy)
+    private long work(
+        string[] input,
+        Func<JsonProperty, bool> addStrategy)
     {
         var line = input.Single();
 
-        var jArray = JArray.Parse(line);
+        var jDocument = JsonDocument.Parse(line);
 
-        return getSum(jArray, addStrategy);
+        return getSum(jDocument.RootElement, addStrategy);
     }
 
     private long getSum(
-        JToken jToken,
-        Func<JObject, bool> shouldAdd)
+        JsonElement jsonElement,
+        Func<JsonProperty, bool> shouldAdd)
     {
         long sum = 0;
 
-        switch (jToken.Type)
+        switch (jsonElement.ValueKind)
         {
-            case JTokenType.Array:
-                foreach (var element in jToken)
+            case JsonValueKind.Array:
+                foreach (var child in jsonElement.EnumerateArray())
                 {
-                    sum += getSum(element, shouldAdd);
-                }
-                break;
-
-            case JTokenType.Integer:
-                sum += jToken.Value<long>();
-                break;
-
-            case JTokenType.Object:
-                if (jToken is JObject jObject)
-                {
-                    if (shouldAdd(jObject))
+                    if (child.ValueKind == JsonValueKind.Number)
                     {
-                        foreach (var element in jToken)
-                        {
-                            sum += getSum(element, shouldAdd);
-                        }
+                        var value = child.GetInt64();
+                        sum += value;
+                    }
+
+                    else
+                    {
+                        var innerSum = getSum(child, shouldAdd);
+                        sum += innerSum;
                     }
                 }
                 break;
 
-            case JTokenType.Property:
-                if (jToken is JProperty jProperty)
+            case JsonValueKind.Object:
+                var children = jsonElement.EnumerateObject();
+                if (children.All(subElement => shouldAdd(subElement)))
                 {
-                    sum += getSum(jProperty.Value, shouldAdd);
+                    foreach (var child in children)
+                    {
+                        var childValue = child.Value;
+                        sum += getSum(childValue, shouldAdd);
+                    }
                 }
+                break;
+
+            case JsonValueKind.Number:
+                sum += jsonElement.GetInt64();
                 break;
         }
 
         return sum;
     }
 
-    private bool addEverything(JToken _) => true;
+    private bool addEverything(JsonProperty _) => true;
 
-    private bool ignoreReds(JObject jObject)
+    private bool addIfNotRed(JsonProperty jsonProperty)
     {
-        foreach (var element in jObject)
-        {
-            var valueToken = element.Value;
-            if (valueToken?.Type == JTokenType.String)
-            {
-                var value = valueToken.Value<string>();
+        var jsonValueElement = jsonProperty.Value;
 
-                if (value == "red")
-                {
-                    return false;
-                }
-            }
+        var isRed = false;
+
+        if (jsonValueElement.ValueKind == JsonValueKind.String)
+        {
+            var jsonValue = jsonValueElement.GetString();
+            isRed = jsonValue == "red";
         }
 
-        return true;
+        return !isRed;
     }
 
     protected override long part1Work(string[] input) =>
         work(input, addEverything);
 
     protected override long part2Work(string[] input) =>
-        work(input, ignoreReds);
+        work(input, addIfNotRed);
 }
