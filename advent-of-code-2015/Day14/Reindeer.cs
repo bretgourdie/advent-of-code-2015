@@ -5,6 +5,8 @@ internal class Reindeer
 
     public readonly string Name;
 
+    public long Score { get; private set; }
+
     public long DistanceTraveled { get; private set; }
 
     public Reindeer(string line)
@@ -21,6 +23,11 @@ internal class Reindeer
             travelTime,
             restTime,
             distanceTraveled: 0);
+    }
+
+    public void AwardPoint()
+    {
+        Score += 1;
     }
 
     public void Update()

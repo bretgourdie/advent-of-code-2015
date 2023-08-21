@@ -1,11 +1,17 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace advent_of_code_2015.Day14;
+﻿namespace advent_of_code_2015.Day14;
 internal class Day14 : AdventSolution
 {
     private const int seconds = 2503;
 
-    protected override long part1Work(string[] input)
+    protected override long part1ExampleExpected => 2660;
+    protected override long part1InputExpected => 2696;
+    protected override long part2ExampleExpected => 1564;
+    protected override long part2InputExpected => 1084;
+
+    protected long work(
+        string[] input,
+        Action<IEnumerable<Reindeer>> afterRoundAction,
+        Func<IEnumerable<Reindeer>, long> getAnswer)
     {
         var allReindeer = new List<Reindeer>();
 
@@ -20,18 +26,34 @@ internal class Day14 : AdventSolution
             {
                 reindeer.Update();
             }
+
+            afterRoundAction(allReindeer);
         }
 
-        return allReindeer.Max(x => x.DistanceTraveled);
+        return getAnswer(allReindeer);
     }
 
-    protected override long part1ExampleExpected => 2660;
-    protected override long part1InputExpected => 2696;
-    protected override long part2Work(string[] input)
+    private void doNothing(IEnumerable<Reindeer> allReindeer) { }
+
+    private void scoreFarthest(IEnumerable<Reindeer> allReindeer)
     {
-        throw new NotImplementedException();
+        var maxDistance = farthestTraveled(allReindeer);
+
+        var allWinningReindeer = allReindeer.Where(x => x.DistanceTraveled == maxDistance);
+
+        foreach (var winningReindeer in allWinningReindeer)
+        {
+            winningReindeer.AwardPoint();
+        }
     }
 
-    protected override long part2ExampleExpected { get; }
-    protected override long part2InputExpected { get; }
+    private long farthestTraveled(IEnumerable<Reindeer> allReindeer) => allReindeer.Max(x => x.DistanceTraveled);
+
+    private long bestScore(IEnumerable<Reindeer> allReindeers) => allReindeers.Max(x => x.Score);
+
+    protected override long part1Work(string[] input) =>
+        work(input, doNothing, farthestTraveled);
+
+    protected override long part2Work(string[] input) =>
+        work(input, scoreFarthest, bestScore);
 }
