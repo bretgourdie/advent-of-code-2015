@@ -1,16 +1,16 @@
-﻿using System.Threading.Tasks.Dataflow;
-
-namespace advent_of_code_2015.Day15;
+﻿namespace advent_of_code_2015.Day15;
 internal class Day15 : AdventSolution
 {
     private const long ingredient_limit = 100;
 
     protected override long part1ExampleExpected => 62842880;
-    protected override long part1InputExpected => -1;
-    protected override long part2ExampleExpected { get; }
-    protected override long part2InputExpected { get; }
+    protected override long part1InputExpected => 18965440;
+    protected override long part2ExampleExpected => 57600000;
+    protected override long part2InputExpected => 15862900;
 
-    private long work(string[] input)
+    private long work(
+        string[] input,
+        Func<IDictionary<Ingredient, long>, bool> canMake)
     {
         var recipe = new Dictionary<Ingredient, long>();
 
@@ -22,21 +22,23 @@ internal class Day15 : AdventSolution
 
         return getBestRecipe(
             recipe,
-            new Dictionary<string, long>(),
-            long.MinValue);
+            new HashSet<string>(),
+            long.MinValue,
+            canMake);
     }
 
     private long getBestRecipe(
         IDictionary<Ingredient, long> recipe,
-        IDictionary<string, long> knownRecipes,
-        long bestScore)
+        ISet<string> knownRecipes,
+        long bestScore,
+        Func<IDictionary<Ingredient, long>, bool> canMake)
     {
         var capacity = recipe.Sum(x => x.Value);
 
         if (capacity == ingredient_limit)
         {
-            var score = scoreRecipe(recipe);
-            knownRecipes[getRecipeString(recipe)] = score;
+            var score = scoreRecipe(recipe, canMake);
+            knownRecipes.Add(getRecipeString(recipe));
             return score;
         }
 
@@ -46,16 +48,12 @@ internal class Day15 : AdventSolution
 
             var recipeString = getRecipeString(recipe);
 
-            if (knownRecipes.ContainsKey(recipeString))
+            if (!knownRecipes.Contains(recipeString))
             {
-                bestScore = knownRecipes[recipeString];
-            }
-
-            else
-            {
-                var subBestScore = getBestRecipe(recipe, knownRecipes, bestScore);
-                knownRecipes[recipeString] = subBestScore;
-                bestScore = Math.Max(bestScore, subBestScore);
+                knownRecipes.Add(recipeString);
+                bestScore = Math.Max(
+                    bestScore,
+                    getBestRecipe(recipe, knownRecipes, bestScore, canMake));
             }
 
             recipe[ingredient] -= 1;
@@ -77,23 +75,64 @@ internal class Day15 : AdventSolution
     }
 
     private long scoreRecipe(
-        IDictionary<Ingredient, long> recipe)
+        IDictionary<Ingredient, long> recipe,
+        Func<IDictionary<Ingredient, long>, bool> canMake)
     {
-        var score =
-            recipe.Aggregate((long)1, (acc, ingredientToAmount) =>
-                acc * 
-                (ingredientToAmount.Key.Capacity * ingredientToAmount.Value
-                + ingredientToAmount.Key.Durability * ingredientToAmount.Value
-                + ingredientToAmount.Key.Flavor * ingredientToAmount.Value
-                + ingredientToAmount.Key.Texture * ingredientToAmount.Value)
-            );
+        if (!canMake(recipe))
+        {
+            return long.MinValue;
+        }
 
-        return Math.Max(0, score);
+        var components = recipe.Keys.First().Components.Keys;
+
+        long score = 1;
+
+        foreach (var component in components.Where(x => x != "calories"))
+        {
+            if (score == 0) break;
+
+            var ingredients = recipe.Keys.ToArray();
+
+            var componentScores = new long[ingredients.Length];
+
+            for (int ii = 0; ii < ingredients.Length; ii++)
+            {
+                var ingredient = ingredients[ii];
+
+                var amount = recipe[ingredient];
+                var propertyValue = ingredient.Components[component];
+
+                componentScores[ii] = amount * propertyValue;
+            }
+
+            var subScore = componentScores.Sum();
+
+            score *= Math.Max(subScore, 0);
+        }
+
+        return score;
+    }
+
+    private bool makeEverything(IDictionary<Ingredient, long> recipe) => true;
+
+    private bool mustBe500Calories(IDictionary<Ingredient, long> recipe)
+    {
+        long calorieScore = 0;
+
+        foreach (var ingredientAndAmount in recipe)
+        {
+            var ingredient = ingredientAndAmount.Key;
+            var amount = ingredientAndAmount.Value;
+
+            calorieScore += amount * ingredient.Components["calories"];
+        }
+
+        return calorieScore == 500;
     }
 
     protected override long part1Work(string[] input) =>
-        work(input);
+        work(input, makeEverything);
     
     protected override long part2Work(string[] input) =>
-        work(input);
+        work(input, mustBe500Calories);
 }

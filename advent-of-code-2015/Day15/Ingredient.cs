@@ -2,28 +2,22 @@
 internal class Ingredient
 {
     public readonly string Name;
-    public readonly long Capacity;
-    public readonly long Durability;
-    public readonly long Flavor;
-    public readonly long Texture;
-    public readonly long Calories;
+    public readonly IDictionary<string, long> Components;
 
     public Ingredient(string line)
     {
         var split = line.Split(": ");
         Name = split.First();
 
-        var components = split[1].Split(' ');
-        Capacity = parse(components[1]);
-        Durability = parse(components[3]);
-        Flavor = parse(components[5]);
-        Texture = parse(components[7]);
-        Calories = parse(components[9]);
-    }
+        Components = new Dictionary<string, long>();
 
-    private long parse(string component)
-    {
-        return long.Parse(component.Replace(",", String.Empty));
+        var splitComponents = split[1].Split(", ");
+
+        foreach (var splitComponent in splitComponents)
+        {
+            var componentAndValue = splitComponent.Split(' ');
+            Components[componentAndValue[0]] = long.Parse(componentAndValue[1]);
+        }
     }
 
     public override string ToString() => Name;
