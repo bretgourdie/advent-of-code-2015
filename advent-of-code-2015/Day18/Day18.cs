@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Text;
 
 namespace advent_of_code_2015.Day18;
 internal class Day18 : AdventSolution
@@ -6,17 +7,17 @@ internal class Day18 : AdventSolution
     private const char on = '#';
     private const char off = '.';
 
-    protected override long part1ExampleExpected => 4;
-    protected override long part1InputExpected => -1;
-    protected override long part2ExampleExpected { get; }
-    protected override long part2InputExpected { get; }
+    protected override long part1ExampleExpected => 1;
+    protected override long part1InputExpected => 814;
+    protected override long part2ExampleExpected => 14;
+    protected override long part2InputExpected => 924;
 
-    private long work(string[] input)
+    private long work(
+        ISet<Point2D> turnedOnLights,
+        int bounds,
+        Func<Point2D, int, bool> canTurnOff)
     {
-        int bounds = input.Length;
         var steps = getSteps(bounds);
-
-        var turnedOnLights = getInitialTurnedOnLights(input);
 
         for (int step = 0; step < steps; step++)
         {
@@ -29,7 +30,10 @@ internal class Day18 : AdventSolution
 
                 if (!shouldKeepOn(numberTurnedOn(turnedOnLightNeighbors, bounds, turnedOnLights)))
                 {
-                    turnOffs.Add(turnedOnLight);
+                    if (canTurnOff(turnedOnLight, bounds))
+                    {
+                        turnOffs.Add(turnedOnLight);
+                    }
                 }
 
                 foreach (var potentialLight in turnedOnLightNeighbors.Where(neighbor => !turnedOnLights.Contains(neighbor)))
@@ -52,9 +56,37 @@ internal class Day18 : AdventSolution
             {
                 turnedOnLights.Add(turnOn);
             }
+
+            var grid = printGrid(turnedOnLights, bounds);
         }
 
         return turnedOnLights.Count;
+    }
+
+    private string printGrid(ISet<Point2D> turnedOnLights, int bounds)
+    {
+        var sb = new StringBuilder();
+
+        for (int ii = 0; ii < bounds; ii++)
+        {
+            for (int jj = 0; jj < bounds; jj++)
+            {
+                var point = new Point2D(ii, jj);
+                if (turnedOnLights.Contains(point))
+                {
+                    sb.Append(on);
+                }
+
+                else
+                {
+                    sb.Append(off);
+                }
+            }
+
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
     }
 
     private bool shouldTurnOn(int neighborsOn) => neighborsOn == 3;
@@ -116,6 +148,19 @@ internal class Day18 : AdventSolution
         return lights;
     }
 
+    private ISet<Point2D> getInitialLightsWithCornersOn(IList<string> input)
+    {
+        var lights = getInitialTurnedOnLights(input);
+        var bounds = input.Count;
+
+        lights.Add(new Point2D(0, 0));
+        lights.Add(new Point2D(0, bounds - 1));
+        lights.Add(new Point2D(bounds - 1, 0));
+        lights.Add(new Point2D(bounds - 1, bounds - 1));
+
+        return lights;
+    }
+
     private int getSteps(int bounds)
     {
         if (bounds < 100)
@@ -126,11 +171,23 @@ internal class Day18 : AdventSolution
         return 100;
     }
 
-    protected override long part1Work(string[] input) =>
-        work(input);
+    private bool lightsWorkCorrectly(Point2D light, int bounds) => true;
 
-    protected override long part2Work(string[] input)
+    private bool cornerLightsWontTurnOff(Point2D light, int bounds)
     {
-        throw new NotImplementedException();
+        var x = light.X;
+        var y = light.Y;
+
+        return
+            !(x == 0 && y == 0)
+            && !(x == bounds - 1 && y == 0)
+            && !(x == 0 && y == bounds - 1)
+            && !(x == bounds - 1 && y == bounds - 1);
     }
+
+    protected override long part1Work(string[] input) =>
+        work(getInitialTurnedOnLights(input), input.Length, lightsWorkCorrectly);
+
+    protected override long part2Work(string[] input) =>
+        work(getInitialLightsWithCornersOn(input), input.Length, cornerLightsWontTurnOff);
 }
