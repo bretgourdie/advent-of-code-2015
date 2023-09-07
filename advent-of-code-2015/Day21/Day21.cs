@@ -3,10 +3,14 @@ internal class Day21 : AdventSolution
 {
     protected override long part1ExampleExpected => 65;
     protected override long part1InputExpected => 111;
-    protected override long part2ExampleExpected { get; }
-    protected override long part2InputExpected { get; }
+    protected override long part2ExampleExpected => 188;
+    protected override long part2InputExpected => 188;
 
-    private long work(string[] input)
+    private long work(
+        string[] input,
+        long initialGold,
+        Func<long, long, long> goldOptimizer,
+        bool lookingForWin)
     {
         var shopText = getShopText();
         var weapons = getWeapons(shopText);
@@ -16,17 +20,22 @@ internal class Day21 : AdventSolution
         var boss = getBossStats(input);
         var you = getYourStats(boss);
 
-        return leastAmountOfGold(you, boss, weapons, armors, rings);
+        return findGoldWithOutcome(
+            you, boss, weapons, armors, rings,
+            initialGold, goldOptimizer, lookingForWin);
     }
 
-    private long leastAmountOfGold(
+    private long findGoldWithOutcome(
         Creature you,
         Creature boss,
         IList<Equipment> weapons,
         IList<Equipment> armors,
-        IList<Equipment> rings)
+        IList<Equipment> rings,
+        long initialGold,
+        Func<long, long, long> goldOptimizer,
+        bool lookingForWin)
     {
-        var leastAmountOfGold = long.MaxValue;
+        var bestAmountOfGold = initialGold;
 
         foreach (var weapon in weapons)
         {
@@ -38,13 +47,13 @@ internal class Day21 : AdventSolution
                     {
                         var goldUsed = getGoldUsed(weapon, armor, ring, otherRing);
 
-                        if (goldUsed < leastAmountOfGold)
+                        if(bestAmountOfGold != goldOptimizer(bestAmountOfGold, goldUsed))
                         {
                             var won = fight(you, boss, weapon, armor, ring, otherRing);
 
-                            if (won)
+                            if (won == lookingForWin)
                             {
-                                leastAmountOfGold = Math.Min(leastAmountOfGold, goldUsed);
+                                bestAmountOfGold = goldOptimizer(bestAmountOfGold, goldUsed);
                             }
                         }
                     }
@@ -52,7 +61,7 @@ internal class Day21 : AdventSolution
             }
         }
 
-        return leastAmountOfGold;
+        return bestAmountOfGold;
     }
 
     private bool fight(
@@ -164,10 +173,17 @@ internal class Day21 : AdventSolution
         return list;
     }
 
-    protected override long part1Work(string[] input) => work(input);
+    protected override long part1Work(string[] input) =>
+        work(
+            input,
+            long.MaxValue,
+            Math.Min,
+            lookingForWin: true);
 
-    protected override long part2Work(string[] input)
-    {
-        throw new NotImplementedException();
-    }
+    protected override long part2Work(string[] input) =>
+        work(
+            input,
+            long.MinValue,
+            Math.Max,
+            lookingForWin: false);
 }
